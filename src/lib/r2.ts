@@ -1,6 +1,7 @@
 import {
     DeleteObjectCommand,
     GetObjectAclCommand,
+    GetObjectCommand,
     PutObjectCommand,
     S3Client ,
 
@@ -48,7 +49,7 @@ export async function deleteAudio(key : string):Promise<void> {
 }
 
 export async function getSignedAudioUrl(key : string):Promise<string> {
-    const command = new GetObjectAclCommand({
+    const command = new GetObjectCommand({
         Bucket : env.R2_BUCKET_NAME ,
         Key : key ,
     });
