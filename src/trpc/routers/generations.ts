@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { z } from 'zod'
 import { createTRPCRouter, orgProcedure , baseProcedure } from '../init'
 import { prisma } from '@/lib/db'
@@ -54,6 +55,7 @@ export const generationRouter = createTRPCRouter({
             })
         )
         .mutation(async ({input , ctx})=>{
+
             const voice = await prisma.voice.findUnique({
                 where :{
                     id : input.voiceId ,
@@ -94,6 +96,12 @@ export const generationRouter = createTRPCRouter({
                     norm_loudness : true
                 },
                 parseAs : 'arrayBuffer'
+            })
+
+            Sentry.logger.info('Generation started' , {
+                orgId : ctx.orgId ,
+                voiceId : input.voiceId ,
+                textLength : input.text.length
             })
 
             if(error){
@@ -145,6 +153,11 @@ export const generationRouter = createTRPCRouter({
                     }
                 })
 
+                Sentry.logger.info('Audio generated' , {
+                    orgId : ctx.orgId ,
+                    generationId : generation.id
+                })
+
             } catch{
                 if(generationId){
                     await prisma.generation
@@ -155,6 +168,11 @@ export const generationRouter = createTRPCRouter({
                         })
                         .catch(() => {})
                 }
+
+                Sentry.logger.error('Generation failed' , {
+                    orgId : ctx.orgId ,
+                    vocieId : input.voiceId
+                })
 
                 throw new TRPCError({
                     code : 'INTERNAL_SERVER_ERROR' ,

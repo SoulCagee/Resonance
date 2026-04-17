@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
 import { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
+import * as Sentry from "@sentry/node";
 
 export const createTRPCContext = async (opts: FetchCreateContextFnOptions) => {
   // 1. 安全地解构 opts，提供默认值
@@ -33,10 +34,16 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
 });
 
+const sentryMiddleware = t.middleware(
+  Sentry.trpcMiddleware({
+    attachRpcInput: true,
+  }),
+);
+
 // 基础路由和过程助手
 export const createTRPCRouter = t.router;
 export const createCallerFactory = t.createCallerFactory;
-export const baseProcedure = t.procedure;
+export const baseProcedure = t.procedure.use(sentryMiddleware);
 
 // 认证过程
 export const authProcedure = baseProcedure.use(async ({ ctx, next }) => {
