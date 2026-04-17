@@ -14,6 +14,9 @@ export const voicesRouter = createTRPCRouter({
                 .optional()
         )
         .query(async({ctx , input})=>{
+            if(!ctx.userId || !ctx.orgId){
+                return new Response('Unauthorized' , { status : 401 })
+            }
             const searchFilter = input?.query
                 ? {
                     OR : [

@@ -40,9 +40,16 @@ export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
   queryOptions: T,
 ) {
   const queryClient = getQueryClient();
-  if (queryOptions.queryKey[1]?.type === 'infinite') {
-    void queryClient.prefetchInfiniteQuery(queryOptions as any);
-  } else {
-    void queryClient.prefetchQuery(queryOptions);
+  try {
+    if (queryOptions.queryKey[1]?.type === 'infinite') {
+      void queryClient.prefetchInfiniteQuery(queryOptions as any);
+    } else {
+      void queryClient.prefetchQuery(queryOptions);
+    }
+  } catch (error) {
+    // 捕获预取错误，避免未捕获的异常破坏服务器端渲染
+    console.error('Prefetch failed for query:', queryOptions.queryKey, error);
+    // 可选：将查询设置为错误状态，以便客户端可以处理
+    // queryClient.setQueryData(queryOptions.queryKey, { error });
   }
 }
