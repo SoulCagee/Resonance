@@ -247,8 +247,6 @@ export function VoiceCreateForm({
                 params.set('description' , description)
             }
 
-            console.log('params')
-            console.log(params.toString())
             const response = 
                 await fetch(`/api/voices/create?${params.toString()}` , {
                     method : 'POST' ,
