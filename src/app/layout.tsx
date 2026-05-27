@@ -1,20 +1,35 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+// import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NuqsAdapter } from 'nuqs/adapters/next/app' 
 import { Toaster } from "sonner";
 import { ClerkProvider} from '@clerk/nextjs'
 import { TRPCReactProvider } from "@/trpc/client";
+import localFont from 'next/font/local'
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
+// const inter = Inter({
+//   variable: "--font-inter",
+//   subsets: ["latin"],
+//   display: 'swap',
+//   adjustFontFallback: false,
+// });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// const geistMono = Geist_Mono({
+//   variable: "--font-geist-mono",
+//   subsets: ["latin"],
+// });
+
+const geistSans = localFont({
+  src: '../fonts/Geist[wght].woff2',
+  variable: '--font-geist-sans',
+  weight: '100 900',
+})
+
+const geistMono = localFont({
+  src: '../fonts/GeistMono[wght].woff2',
+  variable: '--font-geist-mono',
+  weight: '100 900',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -34,7 +49,7 @@ export default function RootLayout({
       <TRPCReactProvider>
         <html lang="en">
           <body
-            className={`${inter.variable} ${geistMono.variable} antialiased`}
+            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
           >
             <NuqsAdapter>
             {children}
