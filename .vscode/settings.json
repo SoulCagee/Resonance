@@ -1,4 +1,52 @@
 {
-    "WillLuke.nextjs.addTypesOnSave": true,
-    "WillLuke.nextjs.hasPrompted": true
+  // 核心格式化配置（保留）
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "eslint.alwaysShowStatus": true,
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
+
+  // ============ TypeScript 性能优化（已根据最新版调整） ============
+  // 关闭自动类型获取（减少网络请求和 CPU 消耗）
+  "js/ts.tsserver.automaticTypeAcquisition.enabled": true,
+
+  // 自动导入行为控制
+  "js/ts.preferences.includePackageJsonAutoImports": "auto",
+  "js/ts.suggest.autoImports": true,
+
+  // tsserver 内存上限（保留，8GB 对你项目是合理的）
+  "js/ts.tsserver.maxTsServerMemory": 8192,
+
+  // 关闭全项目诊断（已弃用，可删除或保留，不影响性能）
+  // 注意：如果删除后觉得诊断响应慢，可以显式设为 false
+  "js/ts.tsserver.experimental.enableProjectDiagnostics": false,
+
+  // 文件监听排除（提升文件树和搜索速度）
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/dist/**": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true
+  },
+
+  // ============ 补全速度优化 ============
+  "editor.quickSuggestionsDelay": 200,
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": true
+  },
+
+  // 保存时自动修复和整理 import
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "WillLuke.nextjs.addTypesOnSave": true,
+  "WillLuke.nextjs.hasPrompted": true
 }

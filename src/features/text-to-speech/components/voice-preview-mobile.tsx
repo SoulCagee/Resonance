@@ -3,132 +3,125 @@
 import { Button } from '@/components/ui/button';
 import { VoiceAvatar } from '@/components/voice-avatar/voice-avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Pause , Play , Download } from 'lucide-react'
+import { Download, Pause, Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
-interface VoicePreviewMobileProps{
-    id? :string ;
-    name : string
+interface VoicePreviewMobileProps {
+  id?: string;
+  name: string;
 }
 export default function VoicePreviewMobile({
-    audioUrl ,
-    voice ,
-    text
-} :{
-    audioUrl : string ,
-    voice : VoicePreviewMobileProps | null;
-    text : string
-} ){
-    const isMobile = useIsMobile();
-    const selectedVoiceName = voice?.name ?? null ;
-    const selectedVoiceSeed = voice?.id ?? null;
+  audioUrl,
+  voice,
+  text,
+}: {
+  audioUrl: string;
+  voice: VoicePreviewMobileProps | null;
+  text: string;
+}) {
+  const isMobile = useIsMobile();
+  const selectedVoiceName = voice?.name ?? null;
+  const selectedVoiceSeed = voice?.id ?? null;
 
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    const [ isPlaying , setIsPlaying ] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-    useEffect(()=>{
-        const audio = audioRef.current
-        if(!audio) return ;
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
-        const handleError = (e) => {
-            console.error('音频加载失败:', e.target.error);
-            // 这里可以设置一个状态，显示错误信息给用户
-        };
+    const handleError = (e: Event) => {
+      toast.error(`音频加载失败:${(e.target as HTMLAudioElement)?.error}`);
+    };
 
-        const handlePlay = () => setIsPlaying(true);
-        const handlePause = () => setIsPlaying(false);
-        const handleEnded = () => setIsPlaying(false);
-        
-        audio.addEventListener('error', handleError);
-        audio.addEventListener('play' , handlePlay)
-        audio.addEventListener('pause' , handlePause)
-        audio.addEventListener('ended' , handleEnded)
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => setIsPlaying(false);
 
-        audio.pause();
-        audio.currentTime = 0;
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
 
-        return ()=>{
-            audio.removeEventListener('error', handleError);
-            audio.removeEventListener('play' , handlePlay)
-            audio.removeEventListener('pause' , handlePause)
-            audio.removeEventListener('ended' , handleEnded)
-        }
-    },[audioUrl])
+    audio.pause();
+    audio.currentTime = 0;
 
-    useEffect(()=>{
-        if(!isMobile){
-            audioRef.current?.pause();
-        }
-    },[isMobile])
+    return () => {
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [audioUrl]);
 
-
-    const togglePlayPause = () =>{
-        const audio = audioRef.current ;
-        if(!audio) return 
-
-        if(isPlaying){
-            audio.pause() ;
-        }else{
-            audio.play()
-        }
+  useEffect(() => {
+    if (!isMobile) {
+      audioRef.current?.pause();
     }
+  }, [isMobile]);
 
-    const handleDownload = () =>{
-        const safeName = 
-            text
-                .slice(0 ,50)
-                .trim()
-                .replace(/[^a-zA-Z0-9]+/g ,'-')
-                .replace(/^-|-$/g , '')
-                .toLowerCase() || 'speech'
+  const togglePlayPause = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
-        const link = document.createElement('a')
-        link.href=audioUrl
-        link.download = `${safeName}.wav`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play();
     }
+  };
 
-    if(!audioUrl) return null ;
+  const handleDownload = () => {
+    const safeName =
+      text
+        .slice(0, 50)
+        .trim()
+        .replace(/[^a-zA-Z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .toLowerCase() || 'speech';
 
-    return (
-        <div className="border-t lg:hidden p-4">
-            <audio ref={audioRef} src={audioUrl} />
-            <div className="grid grid-cols-[1fr_auto] items-center gap-4">
-                <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{text}</p>
-                {selectedVoiceName && (
-                    <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                    <VoiceAvatar
-                        seed={selectedVoiceSeed ?? selectedVoiceName}
-                        name={selectedVoiceName}
-                        className="shrink-0"
-                    />
-                    <span className="truncate">{selectedVoiceName}</span>
-                    </div>
-                )}
-                </div>
+    const link = document.createElement('a');
+    link.href = audioUrl;
+    link.download = `${safeName}.wav`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={handleDownload}>
-                        <Download className="size-4" />
-                    </Button>
-                    <Button
-                        variant="default"
-                        size="icon"
-                        className="rounded-full"
-                        onClick={togglePlayPause}
-                    >
-                        {isPlaying ? (
-                        <Pause className="fill-background" />
-                        ) : (
-                        <Play className="fill-background" />
-                        )}
-                    </Button>
-                </div>
+  if (!audioUrl) return null;
+
+  return (
+    <div className="border-t lg:hidden p-4">
+      <audio ref={audioRef} src={audioUrl} />
+      <div className="grid grid-cols-[1fr_auto] items-center gap-4">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{text}</p>
+          {selectedVoiceName && (
+            <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+              <VoiceAvatar
+                seed={selectedVoiceSeed ?? selectedVoiceName}
+                name={selectedVoiceName}
+                className="shrink-0"
+              />
+              <span className="truncate">{selectedVoiceName}</span>
             </div>
-            </div>
-    )
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={handleDownload}>
+            <Download className="size-4" />
+          </Button>
+          <Button variant="default" size="icon" className="rounded-full" onClick={togglePlayPause}>
+            {isPlaying ? (
+              <Pause className="fill-background" />
+            ) : (
+              <Play className="fill-background" />
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }

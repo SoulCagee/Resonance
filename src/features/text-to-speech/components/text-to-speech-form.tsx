@@ -1,86 +1,86 @@
-'use client'
+'use client';
 
-import { useAppForm } from '@/hooks/use-app-form'
-import { useTRPC } from '@/trpc/client'
-import { formOptions } from '@tanstack/react-form'
-import { useMutation ,QueryClient } from '@tanstack/react-query'
-import { useRouter , } from 'next/navigation'
-import { toast } from 'sonner'
-import { z } from 'zod'
+import { useCheckout } from '@/features/billing/hooks/use-checkout';
+import { useAppForm } from '@/hooks/use-app-form';
+import { useTRPC } from '@/trpc/client';
+import { formOptions } from '@tanstack/react-form';
+import { useMutation } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 const ttsFormSchema = z.object({
-    text : z.string().min(1,'Please enter some text') ,
-    voiceId : z.string().min(1 , 'Please select a voice'),
-    temperature : z.number(),
-    topP:z.number(),
-    topK:z.number(),
-    repetitionPenalty:z.number(),
-})
+  text: z.string().min(1, 'Please enter some text'),
+  voiceId: z.string().min(1, 'Please select a voice'),
+  temperature: z.number(),
+  topP: z.number(),
+  topK: z.number(),
+  repetitionPenalty: z.number(),
+});
 
-export type TTSFormValues = z.infer<typeof ttsFormSchema>
+export type TTSFormValues = z.infer<typeof ttsFormSchema>;
 
-export const defaultTTSValues : TTSFormValues = {
-    text : '',
-    voiceId : '' ,
-    temperature : 0.8 ,
-    topP : 0.95 ,
-    topK : 1000 ,
-    repetitionPenalty : 1.2
-}
+export const defaultTTSValues: TTSFormValues = {
+  text: '',
+  voiceId: '',
+  temperature: 0.8,
+  topP: 0.95,
+  topK: 1000,
+  repetitionPenalty: 1.2,
+};
 
 export const ttsFormOptions = formOptions({
-    defaultValues : defaultTTSValues
-})
+  defaultValues: defaultTTSValues,
+});
 
 export function TextToSpeechForm({
-    children ,
-    defaultValues
+  children,
+  defaultValues,
 }: {
-    children : React.ReactNode ,
-    defaultValues : TTSFormValues
-}){
+  children: React.ReactNode;
+  defaultValues: TTSFormValues;
+}) {
+  const trpc = useTRPC();
+  const router = useRouter();
+  const createMutation = useMutation(trpc.generations.create.mutationOptions({}));
 
-    const trpc = useTRPC();
-    const router = useRouter();
-    const createMutation = useMutation(
-        trpc.generations.create.mutationOptions({})
-    )
+  const { checkout } = useCheckout();
 
-    const form = useAppForm({
-        ...ttsFormOptions ,
-        defaultValues : defaultValues ?? defaultTTSValues ,
-        validators : {
-            onSubmit : ttsFormSchema
-        },
-        onSubmit : async({value}) =>{
-            console.log({value})
-            // const queryClient = new QueryClient();
-            // const options = trpc.generations.test.queryOptions();
-            // // 执行查询
-            // const data = await queryClient.fetchQuery(options);
-            // console.log(data)
+  const form = useAppForm({
+    ...ttsFormOptions,
+    defaultValues: defaultValues ?? defaultTTSValues,
+    validators: {
+      onSubmit: ttsFormSchema,
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        const data = await createMutation.mutateAsync({
+          text: value.text.trim(),
+          voiceId: value.voiceId,
+          temperature: value.temperature,
+          topP: value.topP,
+          topK: value.topK,
+          repetitionPenalty: value.repetitionPenalty,
+        });
 
-            try{
-                const data = await createMutation.mutateAsync({
-                    text : value.text.trim(),
-                    voiceId :value.voiceId ,
-                    temperature :value.temperature ,
-                    topP : value.topP,
-                    topK :value.topK,
-                    repetitionPenalty :value.repetitionPenalty ,
-                })
+        toast.success('Audio generated successfully!');
 
-                toast.success('Audio generated successfully!');
-
-                router.push(`/text-to-speech/${data.id}`)
-
-            }catch(error){
-                const message = error instanceof Error ? error.message : 'Failed to generate audio'
-                console.log(error)
-                toast.error(message)
-            }
+        router.push(`/text-to-speech/${data.id}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to generate audio';
+        if (message === 'SUBSCRIPTION_REQUIRED') {
+          toast.error('Subscription required', {
+            action: {
+              label: 'Subscribe',
+              onClick: () => checkout(),
+            },
+          });
+        } else {
+          toast.error(message);
         }
-    })
+      }
+    },
+  });
 
-    return <form.AppForm>{children}</form.AppForm>
+  return <form.AppForm>{children}</form.AppForm>;
 }
